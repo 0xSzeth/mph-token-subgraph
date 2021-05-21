@@ -1,4 +1,6 @@
 specVersion: 0.0.2
+description: Subgraph for 88mph's MPH token on Ethereum Mainnet
+repository: https://github.com/0xSzeth/mph-token-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,6 +10,7 @@ dataSources:
     source:
       address: "0x8888801aF4d980682e47f1A9036e589479e835C5"
       abi: mph
+      startBlock: 11289991
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
