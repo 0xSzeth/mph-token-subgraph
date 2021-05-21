@@ -1,6 +1,5 @@
-type ExampleEntity @entity {
+type MPHHolder @entity {
   id: ID!
-  count: BigInt!
-  owner: Bytes! # address
-  spender: Bytes! # address
+  address: String!
+  mphBalance: BigDecimal!
 }
