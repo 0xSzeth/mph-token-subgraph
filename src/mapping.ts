@@ -63,7 +63,7 @@ export function handleTransfer(event: Transfer): void {
   // update to address
   let to = getMPHHolder(event.params.to)
   if (to != null) {
-    to.mphBalance = to.mphBalance.minus(value)
+    to.mphBalance = to.mphBalance.plus(value)
     to.save()
   }
 
