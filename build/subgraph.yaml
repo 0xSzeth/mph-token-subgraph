@@ -2,7 +2,7 @@ specVersion: 0.0.2
 description: Subgraph for 88mph's MPH token on Ethereum Mainnet
 repository: https://github.com/0xSzeth/mph-token-subgraph
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: mph
@@ -19,8 +19,8 @@ dataSources:
         - Transfer
       abis:
         - name: mph
-          file: ./abis/mph.json
+          file: mph/abis/mph.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/mapping.ts
+      file: mph/mph.wasm

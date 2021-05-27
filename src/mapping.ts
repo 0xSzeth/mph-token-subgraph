@@ -1,68 +1,70 @@
-import { BigInt } from "@graphprotocol/graph-ts"
-import {
-  mph,
-  Approval,
-  OwnershipTransferred,
-  Transfer
-} from "../generated/mph/mph"
-import { ExampleEntity } from "../generated/schema"
+import { BigDecimal, BigInt, Address } from "@graphprotocol/graph-ts"
+import { mph, Transfer } from "../generated/mph/mph"
+import { MPH, MPHHolder } from "../generated/schema"
 
-export function handleApproval(event: Approval): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
+let MPH_ID = '0'
+let ZERO_DEC = BigDecimal.fromString('0')
+let ZERO_ADDR = Address.fromString('0x0000000000000000000000000000000000000000')
 
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (entity == null) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+export function tenPow(exponent: number): BigInt {
+  let result = BigInt.fromI32(1)
+  for (let i = 0; i < exponent; i++) {
+    result = result.times(BigInt.fromI32(10))
   }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.owner = event.params.owner
-  entity.spender = event.params.spender
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.allowance(...)
-  // - contract.approve(...)
-  // - contract.balanceOf(...)
-  // - contract.decimals(...)
-  // - contract.decreaseAllowance(...)
-  // - contract.increaseAllowance(...)
-  // - contract.initialized(...)
-  // - contract.isOwner(...)
-  // - contract.name(...)
-  // - contract.owner(...)
-  // - contract.ownerMint(...)
-  // - contract.symbol(...)
-  // - contract.totalSupply(...)
-  // - contract.transfer(...)
-  // - contract.transferFrom(...)
+  return result
 }
 
-export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
+export function normalize(i: BigInt, decimals: number = 18): BigDecimal {
+  return i.toBigDecimal().div(new BigDecimal(tenPow(decimals)))
+}
 
-export function handleTransfer(event: Transfer): void {}
+export function getMPHHolder(address: Address): MPHHolder | null {
+  if (address.equals(ZERO_ADDR)) {
+    return null
+  }
+  let entity = MPHHolder.load(address.toHex())
+  if (entity == null) {
+    entity = new MPHHolder(address.toHex())
+    entity.address = address.toHex()
+    entity.mphBalance = ZERO_DEC
+    entity.save()
+  }
+  return entity as MPHHolder
+}
+
+export function handleTransfer(event: Transfer): void {
+
+  // find MPH entity or create it if it does not exist yet
+  let mph = MPH.load(MPH_ID)
+  if (mph == null) {
+    mph = new MPH(MPH_ID)
+    mph.totalSupply = ZERO_DEC
+  }
+  mph.save()
+
+  // update MPH total supply on event transfer to/from zero address
+  let value = normalize(event.params.value)
+  if (event.params.from.equals(ZERO_ADDR)) {
+    // mint
+    mph.totalSupply = mph.totalSupply.plus(value)
+  } else if (event.params.to.equals(ZERO_ADDR)) {
+    // burn
+    mph.totalSupply = mph.totalSupply.minus(value)
+  }
+  mph.save()
+
+  // update from address
+  let from = getMPHHolder(event.params.from)
+  if (from != null) {
+    from.mphBalance = from.mphBalance.minus(value)
+    from.save()
+  }
+
+  // update to address
+  let to = getMPHHolder(event.params.to)
+  if (to != null) {
+    to.mphBalance = to.mphBalance.minus(value)
+    to.save()
+  }
+
+}
