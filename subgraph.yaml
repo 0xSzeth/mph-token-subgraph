@@ -9,7 +9,7 @@ dataSources:
     network: mainnet
     source:
       address: "0x8888801aF4d980682e47f1A9036e589479e835C5"
-      abi: mph
+      abi: MPHToken
       startBlock: 11289991
     mapping:
       kind: ethereum/events
