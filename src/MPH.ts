@@ -1,5 +1,10 @@
 import { BigDecimal, BigInt, Address } from "@graphprotocol/graph-ts"
-import { mph, Transfer } from "../generated/mph/mph"
+import {
+  MPHToken,
+  Approval,
+  OwnershipTransferred,
+  Transfer
+} from "../generated/MPHToken/MPHToken"
 import { MPH, MPHHolder } from "../generated/schema"
 
 let MPH_ID = '0'
@@ -27,10 +32,15 @@ export function getMPHHolder(address: Address): MPHHolder | null {
     entity = new MPHHolder(address.toHex())
     entity.address = address.toHex()
     entity.mphBalance = ZERO_DEC
+    entity.xmphBalance = ZERO_DEC
     entity.save()
   }
   return entity as MPHHolder
 }
+
+export function handleApproval(event: Approval): void {}
+
+export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
 
 export function handleTransfer(event: Transfer): void {
 
