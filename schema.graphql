@@ -3,8 +3,19 @@ type MPH @entity {
   totalSupply: BigDecimal!
 }
 
+type xMPH @entity {
+  id: ID!
+  totalSupply: BigDecimal!
+  pricePerFullShare: BigDecimal!
+  totalRewardDistributed: BigDecimal!
+  currentUnlockEndTimestamp: BigInt!
+  lastRewardTimestamp: BigInt!
+  lastRewardAmount: BigDecimal!
+}
+
 type MPHHolder @entity {
   id: ID!
   address: String!
   mphBalance: BigDecimal!
+  xmphBalance: BigDecimal!
 }
