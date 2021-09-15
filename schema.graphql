@@ -18,4 +18,5 @@ type MPHHolder @entity {
   address: String!
   mphBalance: BigDecimal!
   xmphBalance: BigDecimal!
+  mphStaked: BigDecimal!
 }

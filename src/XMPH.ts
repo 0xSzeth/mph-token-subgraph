@@ -36,6 +36,7 @@ function getMPHHolder(address: Address): MPHHolder | null {
     entity.address = address.toHex()
     entity.mphBalance = ZERO_DEC
     entity.xmphBalance = ZERO_DEC
+    entity.mphStaked = ZERO_DEC
     entity.save()
   }
   return entity as MPHHolder

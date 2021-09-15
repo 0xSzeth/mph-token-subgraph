@@ -5,11 +5,13 @@ import {
   OwnershipTransferred,
   Transfer
 } from "../generated/MPHToken/MPHToken"
+import { XMPHToken } from "../generated/xMPHToken/XMPHToken"
 import { MPH, MPHHolder } from "../generated/schema"
 
 let MPH_ID = '0'
 let ZERO_DEC = BigDecimal.fromString('0')
 let ZERO_ADDR = Address.fromString('0x0000000000000000000000000000000000000000')
+let XMPH_ADDRESS = Address.fromString("0x1702F18c1173b791900F81EbaE59B908Da8F689b")
 
 export function tenPow(exponent: number): BigInt {
   let result = BigInt.fromI32(1)
@@ -33,6 +35,7 @@ export function getMPHHolder(address: Address): MPHHolder | null {
     entity.address = address.toHex()
     entity.mphBalance = ZERO_DEC
     entity.xmphBalance = ZERO_DEC
+    entity.mphStaked = ZERO_DEC
     entity.save()
   }
   return entity as MPHHolder
@@ -77,4 +80,19 @@ export function handleTransfer(event: Transfer): void {
     to.save()
   }
 
+  // if sent to xMPH, then increment the stakedMPH amount of from
+  if (event.params.to.equals(XMPH_ADDRESS)) {
+    from.mphStaked = from.mphStaked.plus(value)
+    from.save()
+  }
+
+  // if sent from xMPH, then decrement the stakedMPH amount of to
+  if (event.params.from.equals(XMPH_ADDRESS)) {
+    let xmphContract = XMPHToken.bind(XMPH_ADDRESS)
+    let pricePerFullShare = xmphContract.try_getPricePerFullShare()
+    to.mphStaked = pricePerFullShare.reverted
+      ? null
+      : to.mphStaked.minus(value.div(normalize(pricePerFullShare.value)))
+    to.save()
+  }
 }
