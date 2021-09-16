@@ -20,6 +20,8 @@ dataSources:
       abis:
         - name: MPHToken
           file: ./abis/MPHToken.json
+        - name: XMPHToken
+          file: ./abis/XMPHToken.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
