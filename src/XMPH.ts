@@ -13,6 +13,7 @@ let ZERO_DEC = BigDecimal.fromString('0')
 let ONE_DEC = BigDecimal.fromString('1')
 let ZERO_INT = BigInt.fromI32(0);
 let ZERO_ADDR = Address.fromString('0x0000000000000000000000000000000000000000')
+let BLOCK_HANDLER_INTERVAL = BigInt.fromI32(5); // call block handler every 5 blocks
 
 function tenPow(exponent: number): BigInt {
   let result = BigInt.fromI32(1)
@@ -95,36 +96,37 @@ export function handleDistributReward(event: DistributeReward): void {
 }
 
 export function handleBlock(block: ethereum.Block): void {
-  let xmph = getXMPH(XMPH_ID);
-  let xmphContract = XMPHToken.bind(XMPH_ADDRESS)
+  if (block.number.mod(BLOCK_HANDLER_INTERVAL).isZero()) {
+    let xmph = getXMPH(XMPH_ID);
+    let xmphContract = XMPHToken.bind(XMPH_ADDRESS)
 
-  let pricePerFullShare = xmphContract.try_getPricePerFullShare()
-  if (pricePerFullShare.reverted) {
-    // do nothing
-  } else {
-    xmph.pricePerFullShare = normalize(pricePerFullShare.value)
+    let pricePerFullShare = xmphContract.try_getPricePerFullShare()
+    if (pricePerFullShare.reverted) {
+      // do nothing
+    } else {
+      xmph.pricePerFullShare = normalize(pricePerFullShare.value)
+    }
+
+    let currentUnlockEndTimestamp = xmphContract.try_currentUnlockEndTimestamp();
+    if (currentUnlockEndTimestamp.reverted) {
+      // do nothing
+    } else {
+      xmph.currentUnlockEndTimestamp = currentUnlockEndTimestamp.value
+    }
+
+    let lastRewardTimestamp = xmphContract.try_lastRewardTimestamp();
+    if (lastRewardTimestamp.reverted) {
+      // do nothing
+    } else {
+      xmph.lastRewardTimestamp = lastRewardTimestamp.value
+    }
+
+    let lastRewardAmount = xmphContract.try_lastRewardAmount();
+    if (lastRewardAmount.reverted) {
+      // do nothing
+    } else {
+      xmph.lastRewardAmount = normalize(lastRewardAmount.value)
+    }
+    xmph.save()
   }
-
-  let currentUnlockEndTimestamp = xmphContract.try_currentUnlockEndTimestamp();
-  if (currentUnlockEndTimestamp.reverted) {
-    // do nothing
-  } else {
-    xmph.currentUnlockEndTimestamp = currentUnlockEndTimestamp.value
-  }
-
-  let lastRewardTimestamp = xmphContract.try_lastRewardTimestamp();
-  if (lastRewardTimestamp.reverted) {
-    // do nothing
-  } else {
-    xmph.lastRewardTimestamp = lastRewardTimestamp.value
-  }
-
-  let lastRewardAmount = xmphContract.try_lastRewardAmount();
-  if (lastRewardAmount.reverted) {
-    // do nothing
-  } else {
-    xmph.lastRewardAmount = normalize(lastRewardAmount.value)
-  }
-
-  xmph.save()
 }
