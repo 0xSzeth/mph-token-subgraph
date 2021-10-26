@@ -74,15 +74,22 @@ export function handleTransfer(event: Transfer): void {
   }
   xmph.save()
 
-  // update from address
   let from = getMPHHolder(event.params.from)
+  let to = getMPHHolder(event.params.to)
+
+  // if burned, then decrement the stakedMPH amount of from
+  if (event.params.to.equals(ZERO_ADDR) && from != null) {
+    from.mphStaked = from.mphStaked.minus(from.mphStaked.times(value).div(from.xmphBalance));
+    from.save()
+  }
+
+  // update from address
   if (from != null) {
     from.xmphBalance = from.xmphBalance.minus(value)
     from.save()
   }
 
   // update to address
-  let to = getMPHHolder(event.params.to)
   if (to != null) {
     to.xmphBalance = to.xmphBalance.plus(value)
     to.save()

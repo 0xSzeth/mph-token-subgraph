@@ -81,18 +81,18 @@ export function handleTransfer(event: Transfer): void {
   }
 
   // if sent to xMPH, then increment the stakedMPH amount of from
-  if (event.params.to.equals(XMPH_ADDRESS)) {
+  if (event.params.to.equals(XMPH_ADDRESS) && from != null) {
     from.mphStaked = from.mphStaked.plus(value)
     from.save()
   }
 
-  // if sent from xMPH, then decrement the stakedMPH amount of to
-  if (event.params.from.equals(XMPH_ADDRESS)) {
-    let xmphContract = XMPHToken.bind(XMPH_ADDRESS)
-    let pricePerFullShare = xmphContract.try_getPricePerFullShare()
-    to.mphStaked = pricePerFullShare.reverted
-      ? null
-      : to.mphStaked.minus(value.div(normalize(pricePerFullShare.value)))
-    to.save()
-  }
+  // // if sent from xMPH, then decrement the stakedMPH amount of to
+  // if (event.params.from.equals(XMPH_ADDRESS) && to != null) {
+  //   let xmphContract = XMPHToken.bind(XMPH_ADDRESS)
+  //   let pricePerFullShare = xmphContract.try_getPricePerFullShare()
+  //   to.mphStaked = pricePerFullShare.reverted
+  //     ? ZERO_DEC
+  //     : to.mphStaked.minus(value.div(normalize(pricePerFullShare.value)).times(to.mphStaked).div(to.xmphBalance))
+  //   to.save()
+  // }
 }
